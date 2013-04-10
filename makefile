@@ -7,7 +7,7 @@ LIBS=-lboost_filesystem
 OBJ_DIR=bin/
 OUT_OBJS=$(addprefix $(OBJ_DIR), $(OBJS))
 DEFS=
-INC=#-I/home/liam/Dropbox/Documents/c++/
+INC=
 OUT=mapsynth
 
 $(OUT): $(OUT_OBJS)
