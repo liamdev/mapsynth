@@ -1,3 +1,5 @@
+# Example makefile for compilation
+
 CC=g++
 CFLAGS=-Wall -std=c++11
 OBJS=Building.o City.o FileOperations.o FileTools.o Main.o MapFragment.o MapLUT.o MathTools.o ModelExporter.o Patch.o PatchMap.o Path.o RoadGraph.o SVGExporter.o XMLTools.o
