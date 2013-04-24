@@ -1,3 +1,15 @@
+/****************************************************************************
+File name: XMLTools.hpp
+
+Description: Convenience functions for XML manipulation using rapidxml.
+
+Author:		Liam de Valmency
+Date:		24th April 2013
+
+This source code is licensed under the MIT license.
+See LICENSE.txt for more information.
+****************************************************************************/
+
 #ifndef XML_TOOLS_HPP
 #define XML_TOOLS_HPP
 

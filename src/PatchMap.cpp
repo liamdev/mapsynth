@@ -29,7 +29,10 @@ void PatchMap::fill(){
 	updateEdges();
 };
 
+// Fill patch map from a city, rather than synthesising a new one.
 void PatchMap::fill(const City& city){
+	
+	// Modify patch width/height to fit the user specified number of tiles.
 	patchWidth = (float)city.getWidth() / xTiles;
 	patchHeight = (float)city.getHeight() / yTiles;
 
@@ -43,18 +46,21 @@ void PatchMap::fill(const City& city){
 
 	updatePositions();
 	updateEdges();
+
+	graph.clear();
 };
 
+// A single iteration for adding an additional patch. Goes from top to bottom, left to right.
 void PatchMap::step(){
 	if(yPos == yTiles)
 		return;
 
-	if(xPos == 0 && yPos == 0){
+	if(xPos == 0 && yPos == 0){ // Top-left patch.
 		patches[xPos][yPos] = lut.getRandomPatch();
 		++xPos;
 	} else {
 		if(yPos > 0){
-			if(xPos == 0){
+			if(xPos == 0){ // Left-column patch.
 				patches[xPos][yPos] = lut.getBelowPatch(patches[xPos][yPos - 1]);
 			} else {
 				Patch left = patches[xPos - 1][yPos];
@@ -74,7 +80,7 @@ void PatchMap::step(){
 	}
 };
 
-
+// Re-cache each edge point (call after shifting positions around).
 void PatchMap::updateEdges(){
 	for(size_t x = 0; x < xTiles; ++x){
 		for(size_t y = 0; y < yTiles; ++y){
@@ -83,6 +89,7 @@ void PatchMap::updateEdges(){
 	}
 };
 
+// Translate all patch contents to their proper place in the map.
 void PatchMap::updatePositions(){
 	for(size_t x = 0; x < xTiles; ++x){
 		for(size_t y = 0; y < yTiles; ++y){
@@ -92,6 +99,7 @@ void PatchMap::updatePositions(){
 	}
 };
 
+// Trigger a recalculation of all map element vertices (call after position update).
 void PatchMap::updateVertices(){
 	for(size_t x = 0; x < xTiles; ++x){
 		for(size_t y = 0; y < yTiles; ++y){
@@ -108,6 +116,9 @@ const RoadGraph& PatchMap::getRoadGraph() const{
 };
 
 void PatchMap::generateRoadGraph(){
+	if(!genGraph)
+		return;
+
 	graph.clear();
 
 	for(size_t x = 0; x < xTiles; ++x){
@@ -123,16 +134,22 @@ void PatchMap::generateRoadGraph(){
 
 /* ------------------- 'Fixer' functions ------------------- */
 
+// Shift road ends to connect to each other.
 void PatchMap::smoothSeams(){
+
+	
 	for(size_t x = 0; x < xTiles; ++x){
 		for(size_t y = 0; y < yTiles; ++y){
-			if(x < xTiles - 1){
+
+			if(x < xTiles - 1){ // Smooth the seam to the right.
 				std::vector<RoadEnd>& rightEnds = patches[x][y].getRightRoads();
 				std::vector<RoadEnd>& leftEnds = patches[x + 1][y].getLeftRoads();
 
+				// Shouldn't happen. Theoretically.
 				if(rightEnds.size() != leftEnds.size())
 					continue;
 
+				// Use pointers within RoadEnd objects to directly shift the path end points.
 				for(size_t i = 0; i < rightEnds.size(); ++i){
 					float xDistance = *(rightEnds[i].coordPos) - *(leftEnds[i].coordPos);
 					float yDistance = rightEnds[i].location - leftEnds[i].location;
@@ -140,14 +157,17 @@ void PatchMap::smoothSeams(){
 					*(leftEnds[i].coordPos) += xDistance / 2;
 					*(rightEnds[i].coordPos + 1) -= yDistance / 2;
 					*(leftEnds[i].coordPos + 1) += yDistance / 2;
+
+					// Keep track of the distance each patch has been modified by.
 					float modification = fabs(xDistance) + fabs(yDistance);
 					patches[x][y].addModification(modification);
 					patches[x + 1][y].addModification(modification);
 				}
 			}
 
-			if(y == 0)
+			if(y == 0) // No top seam to smooth out, so stop here.
 				continue;
+
 
 			std::vector<RoadEnd>& topEnds = patches[x][y].getTopRoads();
 			std::vector<RoadEnd>& bottomEnds = patches[x][y - 1].getBottomRoads();
@@ -155,6 +175,7 @@ void PatchMap::smoothSeams(){
 			if(topEnds.size() != bottomEnds.size())
 				continue;
 
+			// Same as with right seam smoothing.
 			for(size_t i = 0; i < topEnds.size(); ++i){
 				float xDistance = topEnds[i].location - bottomEnds[i].location;
 				float yDistance = *(topEnds[i].coordPos + 1) - *(bottomEnds[i].coordPos + 1);
@@ -162,6 +183,7 @@ void PatchMap::smoothSeams(){
 				*(bottomEnds[i].coordPos) += xDistance / 2;
 				*(topEnds[i].coordPos + 1) -= yDistance / 2;
 				*(bottomEnds[i].coordPos + 1) += yDistance / 2;
+
 				float modification = fabs(xDistance) + fabs(yDistance);
 				patches[x][y].addModification(modification);
 				patches[x][y - 1].addModification(modification);
@@ -172,12 +194,16 @@ void PatchMap::smoothSeams(){
 	updateEdges();
 };
 
+
 void PatchMap::removeFloatingRoads(){
-	if(graph.roadSetCount() == 0)
+	if(graph.roadSetCount() == 0) // Can't remove anything without generating the graph first.
 		generateRoadGraph();
 
+	// Get graph to mark floating roads for non-export.
 	graph.removeFloatingPaths();
 
+	// Create map of Path -> building.
+	// Buildings are associated to the path they are closest to.
 	std::unordered_map<Path*, std::vector<Building*> > removeBuildings;
 	for(size_t x = 0; x < xTiles; ++x){
 		for(size_t y = 0; y < yTiles; ++y){
@@ -186,6 +212,7 @@ void PatchMap::removeFloatingRoads(){
 			for(size_t b = 0; b < buildings.size(); ++b){
 				float centerX = 0, centerY = 0;
 
+				// Calculate building center point.
 				for(size_t bp = 0; bp < buildings[b].getPlotPoints().size() - 1; bp += 2){
 					centerX += buildings[b].getPlotPoints()[bp];
 					centerY += buildings[b].getPlotPoints()[bp + 1];
@@ -194,6 +221,7 @@ void PatchMap::removeFloatingRoads(){
 				centerX /= (buildings[b].getPlotPoints().size() / 2);
 				centerY /= (buildings[b].getPlotPoints().size() / 2);
 
+				// Iterate through paths, track the nearest.
 				Path* nearestPath = NULL;
 				float minDist = FLT_MAX;
 
@@ -210,11 +238,13 @@ void PatchMap::removeFloatingRoads(){
 					}
 				}
 
+				// Store calculated path -> building mapping.
 				removeBuildings[nearestPath].push_back(&(buildings[b]));
 			}
 		}
 	}
 
+	// Mark all buildings associated with non-export roads to also not export.
 	std::unordered_map<Path*, std::vector<Building*> >::iterator iter;
 	for(iter = removeBuildings.begin(); iter != removeBuildings.end(); ++iter){
 		if(!iter->first->exportStatus()){
@@ -247,11 +277,15 @@ void PatchMap::exportOBJ(const std::string& filePath) const{
 	objExp.exportModel(filePath);
 };
 
-void PatchMap::exportSVG(const std::string& filePath) const{
+void PatchMap::exportSVG(const std::string& filePath, bool grid) const{
 	SVGExporter svgExp;
 
+	// Turn overlaid grid on/off.
 	svgExp.setGrid(SVGGrid(patchWidth, patchHeight, xTiles, yTiles, DEFAULT_GRID_LINE_WIDTH));
-	svgExp.enableGrid();
+	if(grid)
+		svgExp.enableGrid();
+	else
+		svgExp.disableGrid();
 
 	for(size_t x = 0; x < xTiles; ++x){
 		for(size_t y = 0; y < yTiles; ++y){
@@ -277,12 +311,27 @@ void PatchMap::exportDetails(const std::string& filePath, const std::string& map
 	if(fOut.is_open()){
 		fOut << mapName << "\t";
 
+		// Weight total.
 		float localQuality = 0;
+		float avgQuality = 0;
 
+		// Worst tile (potential for iterative replacement of worst tiles).
 		int worstX = 0, worstY = 0;
 		float worstVal = 0;
-		float modifications = 0;
 
+		// Modifications (level of 'fixing' applied, less implies better initial structure).
+		float modifications = 0;
+		float avgModifications = 0;
+
+		// Building/path densities.
+		float bDensity = 0;
+		float pDensity = 0;
+		float avgBDensity = 0;
+		float avgPDensity = 0;
+
+		int floatingRoads;
+
+		// Collect statistics over each patch.
 		for(size_t x = 0; x < xTiles; ++x){
 			for(size_t y = 0; y < yTiles; ++y){
 				float upQuality = 0, downQuality = 0, leftQuality = 0, rightQuality = 0;
@@ -323,23 +372,39 @@ void PatchMap::exportDetails(const std::string& filePath, const std::string& map
 				}
 
 				localQuality += tileQuality;
-				
+
+				bDensity += patches[x][y].getBuildingDensity();
+				pDensity += patches[x][y].getPathDensity();
 			}
 		}
 
+		// Calculate averages (mean).
+		avgQuality = localQuality / (xTiles * yTiles);
+		avgBDensity = bDensity / (xTiles * yTiles);
+		avgPDensity = pDensity / (xTiles * yTiles);
+		avgModifications = modifications / (xTiles * yTiles);
+
+		// Round, for nicer output. Could disable for more precise results.
+		// TODO: Automatic disabling of rounding for metrics which fall below the value of the precision level.
 		localQuality = round(localQuality, 0.01f);
 		modifications = round(modifications, 0.01f);
+		avgQuality = round(avgQuality, 0.001f);
+		avgBDensity = round(avgBDensity, 0.001f);
+		avgPDensity = round(avgPDensity, 0.001f);
+		avgModifications = round(avgModifications, 0.001f);
 
-		fOut << localQuality << "\t" << worstX << "," << worstY << "\t" << modifications << "\t";
+		floatingRoads = getRoadGraph().numFloatingRoads();
+
+		// Write to file.
+		fOut << localQuality << "\t" << avgQuality << "\t" << modifications << "\t" << avgModifications << "\t";
+		fOut << bDensity << "\t" << avgBDensity << "\t" << pDensity << "\t" << avgPDensity << "\t";
+		fOut << floatingRoads << "\t" << worstX << "," << worstY << "\n";
 	}
-
-	const RoadGraph& graph = getRoadGraph();
-
-	fOut << graph.numFloatingRoads() << "\n";
 
 	fOut.close();
 };
 
+// Debugging purposes.
 void PatchMap::exportGraphDetails(const std::string& filePath) const{
 	getRoadGraph().exportRoadSets(filePath);
 };

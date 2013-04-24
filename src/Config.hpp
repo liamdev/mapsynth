@@ -1,3 +1,16 @@
+/****************************************************************************
+File name: Config.hpp
+
+Description: Constants for various aspects of the program's operation.
+
+Author:		Liam de Valmency
+Date:		24th April 2013
+
+This source code is licensed under the MIT license.
+See LICENSE.txt for more information.
+****************************************************************************/
+
+
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
@@ -5,8 +18,6 @@
 
 //Default file paths.
 const std::string RES_DIR = "res/";
-const std::string OBJ_OUTPUT_PATH = "output.obj";
-const std::string SVG_OUTPUT_PATH = "output.svg";
 const std::string DETAILS_OUTPUT_PATH = "mapeval.txt";
 
 //Default tile values.
@@ -19,7 +30,7 @@ const unsigned int DEFAULT_OUTPUT_HEIGHT = 8;
 
 //Map modification values.
 const float MAX_INTERSECTION_MERGE_RADIUS = 10.0f;
-const float JUNCTION_EQ_DISTANCE = 5.0f;
+const float JUNCTION_EQ_DISTANCE = 8.0f;
 
 //Stroke width for SVG grid output.
 const float DEFAULT_GRID_LINE_WIDTH = 1.0f;

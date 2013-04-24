@@ -9,17 +9,21 @@ void ModelExporter::addPath(const Path& path){
 };
 
 void ModelExporter::exportModel(const std::string& filePath){
+
+	// Open output file.
 	std::ofstream modelFile(filePath.c_str());
 	if(modelFile.is_open()){
+		// File header.
 		modelFile << "# Generated city OBJ file\n";
+		modelFile << "# Map Synthesiser by Liam de Valmency, 2013\n";
 
 		int totalVerts = 0;
 
-		//Output buildings.
+		//Output each building.
 		for(size_t i = 0; i < buildings.size(); ++i){
 			const std::vector<float>& verts = buildings[i].getVertices();;
 
-			modelFile << "o city_obj." << (i + 1) << "\n";
+			modelFile << "o bldng." << (i + 1) << "\n";
 
 			for(size_t j = 0; j < verts.size(); j += 3){
 				modelFile << "v " << verts[j] << " " << verts[j + 1] << " " << verts[j + 2] << "\n";
@@ -38,11 +42,11 @@ void ModelExporter::exportModel(const std::string& filePath){
 			modelFile << "\n";
 		}
 
-		//Output paths
+		//Output each path.
 		for(size_t i = 0; i < paths.size(); ++i){
 			const std::vector<float>& verts = paths[i].getVertices();;
 
-			modelFile << "o city_obj." << (i + 1) << "\n";
+			modelFile << "o road." << (i + 1) << "\n";
 
 			for(size_t j = 0; j < verts.size(); j += 3){
 				modelFile << "v " << verts[j] << " " << verts[j + 1] << " " << verts[j + 2] << "\n";

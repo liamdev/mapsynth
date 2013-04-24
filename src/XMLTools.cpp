@@ -1,5 +1,6 @@
 #include "XMLTools.hpp"
 
+// Search for child node by "id" attribute instead of name.
 rxml::xml_node<>* getChildNode(rxml::xml_node<>* parent, const std::string id){
 	size_t childCount = rxml::count_children(parent);
 	

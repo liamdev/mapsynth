@@ -1,5 +1,21 @@
+/****************************************************************************
+File name: ContainerTools.hpp
+
+Description: Provides some convenience functions for STL containers.
+
+Author:		Liam de Valmency
+Date:		24th April 2013
+
+This source code is licensed under the MIT license.
+See LICENSE.txt for more information.
+****************************************************************************/
+
+
 #ifndef CONTAINER_TOOLS_HPP
 #define CONTAINER_TOOLS_HPP
+
+#include <algorithm>
+#include <vector>
 
 //Convenience functions for adding multiple elements to a vector.
 template <class T>
@@ -27,6 +43,5 @@ void addUnique(std::vector<T>& vec, T element){
 	if(std::find(vec.begin(), vec.end(), element) == vec.end())
 		vec.push_back(element);
 };
-
 
 #endif

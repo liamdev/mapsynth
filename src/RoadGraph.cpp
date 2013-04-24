@@ -1,9 +1,9 @@
 #include "RoadGraph.hpp"
 
-
 /* --------------------- Road Graph functions --------------------- */
 
 void RoadGraph::addRoad(Path& p){
+	// New set.
 	RoadSet set;
 	
 	const std::vector<float>& pathPoints = p.getPathPoints();
@@ -13,6 +13,7 @@ void RoadGraph::addRoad(Path& p){
 		bool found = false;
 		
 		for(size_t j = 0; j < roadSets.size(); ++j){
+			// If current node exists in another set, merge the two and remove the old one.
 			if(roadSets[j].contains(node)){
 				set = set.join(roadSets[j]);
 				found = true;
@@ -23,6 +24,7 @@ void RoadGraph::addRoad(Path& p){
 
 		if(!found){
 			set.addNode(node);
+			// Check if the added node is connected to the map's boundaries.
 			if(node.first <= (xStart + JUNCTION_EQ_DISTANCE) || node.first >= (xLimit - JUNCTION_EQ_DISTANCE) ||
 				node.second <= (yStart + JUNCTION_EQ_DISTANCE) || node.second >= (yLimit - JUNCTION_EQ_DISTANCE))
 				set.setExternallyConnected(true);
@@ -48,6 +50,7 @@ int RoadGraph::numFloatingRoads() const{
 	return count;
 };
 
+// Debugging purposes, outputs road set data to the console.
 void RoadGraph::printRoadSets() const{
 	for(size_t i = 0; i < roadSets.size(); ++i){
 		std::cout << "Road set " << (i + 1) << ":\n";
@@ -60,6 +63,7 @@ void RoadGraph::printRoadSets() const{
 	}
 };
 
+// Debugging purposes, outputs road set data to a file.
 void RoadGraph::exportRoadSets(const std::string& filePath) const{
 	std::ofstream fOut(filePath.c_str());
 
@@ -83,6 +87,7 @@ void RoadGraph::exportRoadSets(const std::string& filePath) const{
 	fOut.close();
 };
 
+// Mark all roads in non-externally connected sets for non-export.
 void RoadGraph::removeFloatingPaths(){
 	for(size_t i = 0; i < roadSets.size(); ++i){
 		if(!roadSets[i].isExternallyConnected())
@@ -109,6 +114,7 @@ void RoadSet::setPathExport(bool pExport){
 		paths[i]->setExportStatus(false);
 };
 
+// Merge two road sets.
 RoadSet& RoadSet::join(const RoadSet& other){
 	nodes.insert(other.begin(), other.end());
 

@@ -1,3 +1,15 @@
+/****************************************************************************
+File name: SVGExporter.hpp
+
+Description: Class for exporting a 2D SVG representation of a map.
+
+Author:		Liam de Valmency
+Date:		24th April 2013
+
+This source code is licensed under the MIT license.
+See LICENSE.txt for more information.
+****************************************************************************/
+
 #ifndef SVG_EXPORTER_HPP
 #define SVG_EXPORTER_HPP
 
@@ -13,6 +25,7 @@
 
 struct SVGGrid{
 
+	// Square grid.
 	SVGGrid(float tSize = 0, int x = 0, int y = 0, float lSize = 0.0f):
 		tileWidth(tSize),
 		tileHeight(tSize),
@@ -21,6 +34,7 @@ struct SVGGrid{
 		lineSize(lSize)
 	{};
 
+	// Rectangular grid.
 	SVGGrid(float tWidth, float tHeight, int x = 0, int y = 0, float lSize = 0.0f):
 		tileWidth(tWidth),
 		tileHeight(tHeight),
@@ -49,10 +63,12 @@ class SVGExporter{
 
 		void addPath(const Path& path);
 
+		// Export to SVG format. Note: does not check for SVG file extension.
 		void exportSVG(const std::string& filePath);
 
 		void clear(){buildings.clear(); paths.clear();};
 
+		// Modify grid overlay.
 		void setGrid(SVGGrid g){grid = g;};
 		void enableGrid() {exportGrid = true;};
 		void disableGrid(){exportGrid = false;};

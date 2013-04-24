@@ -68,14 +68,16 @@ std::vector<float> getBuildingPosFromString(const std::string xmlString){
 };
 
 
-//Utility function to get the value of a given node's style attribute.
+// Utility function to get the value of a given node's style attribute.
 std::string getStyleValue(const std::string& styleStr, const std::string& attrName){
+
+	// Check the attribute exists.
 	int attrPos = styleStr.find(attrName);
 	if(attrPos == -1)
 		return "";
 
+	// If the attribute exists, get its value.
 	std::string val = styleStr.substr(attrPos + attrName.size() + 1);
-
 	int endPoint = val.find(";");
 	if(endPoint != -1)
 		val = val.substr(0, endPoint);
@@ -83,9 +85,10 @@ std::string getStyleValue(const std::string& styleStr, const std::string& attrNa
 	return val;
 };
 
-
+// Populate the city from a given file.
 City::City(const std::string& filePath){
-	//Get array of characters in the SVG file.
+
+	// Get array of characters in the SVG file.
 	std::string svg = readFile(filePath);
 	std::vector<char> xmlChars(svg.begin(), svg.end());
 	xmlChars.push_back('\0');
@@ -100,7 +103,7 @@ City::City(const std::string& filePath){
 			std::cerr << "Invalid XML file: " << filePath << ". No root found.\n";
 		}
 
-		/*Assuming the following node id structure to fit with Maperitive's output:
+		/* Assumes the following node id structure to fit with Maperitive's default output:
 		 *
 		 *	=> Map
 		 *		=> Polygons
@@ -119,6 +122,7 @@ City::City(const std::string& filePath){
 		//Iterate through the buildings.
 		rxml::xml_node<>* building = buildingNode->first_node();
 		for(size_t i = 0; i < rxml::count_children(buildingNode); ++i){
+
 			//Get the building base points.
 			std::string buildingStr = building->first_attribute("d")->value();
 			std::vector<float> buildingPos = getBuildingPosFromString(buildingStr);
@@ -191,13 +195,11 @@ City::City(const std::string& filePath){
 		}
 
 		//Convert to int (add one for tolerance).
-		width  = (int)(maxX + 1);
+		width = (int)(maxX + 1);
 		height = (int)(maxY + 1);
 
 		//Sort the path sizes in descending order.
 		std::sort(sizes.begin(), sizes.end(), std::greater<int>());
-
-		density = (float)buildings.size() / (width * height);
 
 	} catch(const std::exception& err){
 		//Catch exceptions, most likely XMLNodeNotFoundException.
@@ -205,7 +207,9 @@ City::City(const std::string& filePath){
 	}
 };
 
+// Get the road/building data contained within the specified window area.
 void City::fillFragment(MapFragment& frag, float xPos, float yPos, float width, float height) const{
+
 	//Define window boundaries.
 	float xLimit = xPos + width;
 	float yLimit = yPos + height;
@@ -236,14 +240,17 @@ void City::fillFragment(MapFragment& frag, float xPos, float yPos, float width, 
 		std::vector<float> clippedPath;
 
 		for(size_t j = 0; j < pathPoints.size() - 3; j += 2){
+			// Get the clipped version of each of the path segments.
 			ClipResult clipped = clipLine(pathPoints[j], pathPoints[j + 1],
 											pathPoints[j + 2], pathPoints[j + 3],
 											(float)xPos, (float)yPos, (float)xLimit, (float)yLimit);
+			// Exclude those segments which are fully clipped.
 			if(clipped.remove)
 				continue;
 
 			size_t size = clippedPath.size();
 
+			// Checks if a 'new' path is required (i.e. the clipped version exits the window then re-enters).
 			bool newPath = false;
 			if(size < 2){
 				newPath = true;
@@ -264,9 +271,11 @@ void City::fillFragment(MapFragment& frag, float xPos, float yPos, float width, 
 			clippedPath.push_back(clipped.y1);
 		}
 
+		// Exclude empty paths.
 		if(clippedPath.size() > 0)
 			frag.addPath(Path(clippedPath, paths[i].getSize()));
 	}
 
+	// Calculate the edge points within the fragment.
 	frag.cacheEdgePoints();
 };

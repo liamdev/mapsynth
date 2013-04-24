@@ -1,3 +1,15 @@
+/****************************************************************************
+File name: RoadGraph.hpp
+
+Description: Class which calculates connectivity of input roads.
+
+Author:		Liam de Valmency
+Date:		24th April 2013
+
+This source code is licensed under the MIT license.
+See LICENSE.txt for more information.
+****************************************************************************/
+
 #ifndef ROAD_GRAPH_HPP
 #define ROAD_GRAPH_HPP
 
@@ -11,10 +23,10 @@
 #include "Path.hpp"
 
 
-//Defined as the x,y coordinates of a node (i.e. one path point in SVG format).
+// Defined as the x,y coordinates of a node (i.e. one path point in SVG format).
 typedef std::pair<float, float> RoadNode;
 
-
+// Structure for overloading equality of two RoadNodes.
 struct NodeComp{
 	bool operator()(const RoadNode& lhs, const RoadNode& rhs) const {
 		float xDist = (lhs.first - rhs.first) * (lhs.first - rhs.first);
@@ -23,15 +35,13 @@ struct NodeComp{
 		if((xDist + yDist) < (JUNCTION_EQ_DISTANCE * JUNCTION_EQ_DISTANCE))
 			return false;
 
-		//if(fEq(lhs.first, rhs.first, JUNCTION_EQ_DISTANCE) && fEq(lhs.second, rhs.second, JUNCTION_EQ_DISTANCE))
-			//return false;
-
 		return lhs < rhs;
 	};
 };
 
 typedef std::set<RoadNode, NodeComp> NodeSet;
 
+// Stores a list of connected road nodes.
 class RoadSet{
 	
 	public:
@@ -39,6 +49,7 @@ class RoadSet{
 			externalConnection(eConn)
 		{};
 
+		// Merge with another set.
 		RoadSet& join(const RoadSet& other);
 
 		void addNode(const RoadNode& node);
@@ -46,12 +57,14 @@ class RoadSet{
 
 		void setExternallyConnected(bool conn){externalConnection = conn;};
 
+		// Enable/disable export of each path in the set.
 		void setPathExport(bool pExport);
 
 		size_t nodeCount() const {return nodes.size();};
 		
 		bool contains(const RoadNode& node);
 
+		// Whether the contained paths have a link to the map's edge.
 		bool isExternallyConnected() const {return externalConnection;};
 
 		NodeSet::iterator begin(){return nodes.begin();};
@@ -97,6 +110,7 @@ class RoadGraph{
 		float getXLimit() const {return xLimit;};
 		float getYLimit() const {return yLimit;};
 
+		// Debugging purposes.
 		void printRoadSets() const;
 		void exportRoadSets(const std::string& filePath) const;
 
