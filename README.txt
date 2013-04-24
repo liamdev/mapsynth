@@ -1,5 +1,5 @@
 ============================
-Map Synthesiser
+PatchCity Map Synthesiser
 ============================
 
 3rd year project system for generating city networks in an example-based manner.
@@ -29,7 +29,7 @@ purposes.
 
 Arguments can be provided to modify the behaviour of the synthesiser. Usage:
 
-./mapsynth [window] [offset] [output]
+./mapsynth [window] [offset] [output] [count] [float removal] [SVG] [grid] [OBJ]
 
 Window size specifies the dimensions of the individual fragments extracted from the input maps
 (i.e. the width and height of the 'puzzle pieces').
@@ -40,10 +40,19 @@ as halving the offset size quadruples the number of fragments which the program 
 
 Output controls the number of 'pieces' the program puts together to form the resulting maps.
 
+Count is the number of maps synthesised in a single execution.
+
+The remaining flags are boolean (integer value greater than 0 to enable):
+
+Float removal dictates whether or not to remove 'floating' roads from the synthesised output.
+SVG enables or disables SVG output of the results.
+Grid enables or disables the grid overlay in the SVG output.
+OBJ enables or disables exporting the synthesised cities to a 3D model file.
+
 Output:
 -----------------
 
-SVG maps are output into the root directory of the repository (likely to change).
+SVG maps are output into the root directory of the repository.
 
 An evaluation file is also written to the root directory, containing statistics for each of
 the generated maps, as well as the input maps.
