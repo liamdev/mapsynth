@@ -9,7 +9,8 @@ PatchMap::PatchMap(const MapLUT& lut, unsigned int x, unsigned int y, float wind
 	xTiles(x),
 	yTiles(y),
 	xPos(0),
-	yPos(0)
+	yPos(0),
+	genGraph(false)
 {
 	//Set up patch array.
 	patches = std::vector<std::vector<Patch> >(x, std::vector<Patch>(y, Patch(MapFragment())));

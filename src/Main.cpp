@@ -101,6 +101,7 @@ int main(int argc, char* argv[]){
 
 		// Optional: remove floating roads.
 		if(removeFRoads){
+			map.enableGraphGeneration();
 			map.generateRoadGraph();
 			map.removeFloatingRoads();
 		}
